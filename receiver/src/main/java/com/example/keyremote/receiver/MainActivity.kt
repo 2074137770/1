@@ -72,7 +72,13 @@ class KeyReceiverService : Service() {
                                     else -> -1
                                 }
                                 if (code != -1) {
-                                    Shizuku.newProcess(arrayOf("sh", "-c", "input keyevent $code"), null, null)
+                                    try {
+                                        val method = Shizuku::class.java.getDeclaredMethod("newProcess", Array<String>::class.java, Array<String>::class.java, String::class.java)
+                                        method.isAccessible = true
+                                        method.invoke(null, arrayOf("sh", "-c", "input keyevent $code"), null, null)
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
                                 }
                             }
                             client.close()
