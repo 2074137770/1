@@ -16,30 +16,22 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # 核心修复：使用 v4 版本并禁用默认的 tools 安装，避免 sdkmanager 报错
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
-          packages: ''
+          gradle-version: '8.7'
 
-      # 核心修复：构建前自动下载缺失的 gradle-wrapper.jar
-      - name: Download Gradle Wrapper Jar
+      - name: Setup Android SDK & Accept Licenses
         run: |
-          curl -L -o gradle/wrapper/gradle-wrapper.jar \
-          https://github.com/gradle/gradle/raw/v8.7.0/gradle/wrapper/gradle-wrapper.jar
-          chmod +x ./gradlew
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Build debug APKs
-        run: ./gradlew :sender:assembleDebug :receiver:assembleDebug
+        run: gradle :sender:assembleDebug :receiver:assembleDebug
 
-      - name: Collect APKs
-        run: |
-          mkdir -p out
-          cp sender/build/outputs/apk/debug/*.apk out/sender.apk
-          cp receiver/build/outputs/apk/debug/*.apk out/receiver.apk
-
-      - name: Upload APK Artifacts
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
           name: keyremote-apks
-          path: out/*.apk
+          path: |
+            sender/build/outputs/apk/debug/*.apk
+            receiver/build/outputs/apk/debug/*.apk
